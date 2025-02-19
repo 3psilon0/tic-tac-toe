@@ -1,7 +1,7 @@
-const GameController = (
+const GameModel = (
     function () {
-        let player1, player2, currentPlayer, gameActive = false;
-        const gameBoard = (function () {
+        let player1 = null, player2 = null, currentPlayer = null, gameActive = false;
+        const gameBoard = ( function () {
             const boardArray = Array(9).fill(0);
             function insertAt(index, value) {
                 if (boardArray[index] === 0) {
@@ -55,52 +55,76 @@ const GameController = (
 
         function Player(symbol, name = 'Player') {
             const _name = name, _symbol = symbol;
+            let score = 0;
             function makeMove(index) {
                 return gameBoard.insertAt(index, symbol);
             }
+            function updateScore() {
+                score++;
+            }
+            function resetScore() {
+                score = 0;
+            }
             return {
+                get score() {
+                    return score;
+                },
                 get name() {
                     return _name;
                 },
                 get symbol() {
                     return _symbol;
                 },
-                makeMove
+                makeMove,
+                updateScore,
+                resetScore
             }
         }
 
-        function startNewGame() {
+        function startNewGame(player1Name = 'Player 1', player2Name = 'Player 2') {
             gameActive = true;
             gameBoard.reset();
-            player1 = Player('X', 'Player 1');
-            player2 = Player('O', 'Player 2');
+            if(player1 === null && player2 === null){
+                player1 = Player('X', player1Name);
+                player2 = Player('O', player2Name);
+            }
+
             currentPlayer = ((...args) => args[Math.floor(Math.random() * args.length)])(player1, player2);
         }
 
         function playTurn(index){
             if(typeof index !== 'number' || index < 0 || index > 8){
-                console.log('Invalid move. Please enter a number between 0 and 8.');
-                return;
+                return 'invalid';
             }
             if(gameActive){
                 currentPlayer.makeMove(index);
-                switch(gameBoard.checkState()){
+                const outcome = gameBoard.checkState()
+                switch(outcome){
                     case 'win':
-                        console.log(currentPlayer.name + ' wins!');
+                        currentPlayer.updateScore();
                         gameActive = false;
                         break;
                     case 'draw':
-                        console.log('It\'s a draw!');
                         gameActive = false;
                         break;
                     default:
                         currentPlayer = currentPlayer === player1 ? player2 : player1;
                         break;
                 }
+                return outcome;
             }
+            return 'notActive';
+        }
+
+        function resetScores() {
+            player1.resetScore();
+            player2.resetScore();
         }
 
         return {
+            get scores() {
+                return [player1.score, player2.score];
+            },
             get BoardState() {
                 return gameBoard.boardArray;
             },
@@ -111,17 +135,20 @@ const GameController = (
                 return gameActive;
             },
             startNewGame,
-            playTurn
+            playTurn,
+            resetScores
         };
     }
 )();
 
-GameController.startNewGame();
-GameController.playTurn(0);
-GameController.playTurn(1);
-GameController.playTurn(3);
-GameController.playTurn(4);
-GameController.playTurn(6);
-console.log(GameController.BoardState[0], GameController.BoardState[1], GameController.BoardState[2]);
-console.log(GameController.BoardState[3], GameController.BoardState[4], GameController.BoardState[5]);
-console.log(GameController.BoardState[6], GameController.BoardState[7], GameController.BoardState[8]);
+const displayController = ( function (gm) {
+    const displayElements = (
+        function() {
+            const gameGrid = document.createElement('div');
+            gameGrid.classList.add('game-grid');
+            gameGrid.innerHTML = Array.from(gm.BoardState, (_ , i) => `<div class="cell" id="cell-${i}"></div>`).join('');
+
+            
+        }
+    )(); 
+})(GameModel);
