@@ -1,0 +1,36 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    height: 500px;
+    width: 500px;
+}
+
+.cell-default{
+    border: 1px solid black;
+}
+
+.cell-x {
+    background: url(./assets/images/cross.png) no-repeat center/100%;
+}
+
+.cell-o {
+    background: url(./assets/images/circle.png) no-repeat center/80%;
+}
+
+.winning-cell {
+    background-color: lightgreen;
+}
