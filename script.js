@@ -1,7 +1,7 @@
-const gameController = ( function (doc) {
+const gameController = ( function () {
     const GameModel = (
         function () {
-            let player1 = null, player2 = null, currentPlayer = null, gameActive = false;
+            let currentPlayer = null, gameActive = false;
             const gameBoard = ( function () {
                 const boardArray = Array(9).fill(0);
                 function insertAt(index, value) {
@@ -35,7 +35,7 @@ const gameController = ( function (doc) {
                     }
     
                     function checkDraw() {
-                        if(!boardArray.includes(0) && !checkWin()) {
+                        if(!boardArray.includes(0) && !checkWin().success) {
                             return 1;
                         }
                         return 0;
@@ -70,7 +70,7 @@ const gameController = ( function (doc) {
                     return gameBoard.insertAt(index, symbol);
                 }
                 function updateScore() {
-                    score++;
+                    score = score + 1;
                 }
                 function resetScore() {
                     score = 0;
@@ -91,19 +91,17 @@ const gameController = ( function (doc) {
                 }
             }
     
-            function startNewGame(player1Name = 'Player 1', player2Name = 'Player 2') {
+            let player1 = Player('X', 'Player 1');
+            let player2 = Player('O', 'Player 2');
+
+            function startNewGame() {
                 gameActive = true;
                 gameBoard.reset();
-                if(player1 === null && player2 === null){
-                    player1 = Player('X', player1Name);
-                    player2 = Player('O', player2Name);
-                }
-    
                 currentPlayer = ((...args) => args[Math.floor(Math.random() * args.length)])(player1, player2);
             }
     
             function playTurn(index){
-                if(typeof index !== 'number' || index < 0 || index > 8){
+                if(typeof index !== 'number' || index < 0 || index > 8 || gameBoard.boardArray[index] != 0){
                     return {
                         state: 'invalid',
                         winningCombo: null
@@ -138,8 +136,14 @@ const gameController = ( function (doc) {
             }
     
             return {
-                get scores() {
+                get playerScores(){
                     return [player1.score, player2.score];
+                },
+                get playerNames(){
+                    return [player1.name, player2.name];
+                },
+                get playerSymbols(){
+                    return [player1.symbol, player2.symbol];
                 },
                 get BoardState() {
                     return gameBoard.boardArray;
@@ -159,34 +163,34 @@ const gameController = ( function (doc) {
     
     const gameView = (
         function() {
-            const gameGrid = doc.createElement('div');
+            const gameGrid = document.createElement('div');
             gameGrid.classList.add('game-grid');
             gameGrid.innerHTML = Array.from(GameModel.BoardState, (_ , i) => `<div class="cell-default" id="cell-${i}"></div>`).join('');
 
-            const statusBar = doc.createElement('p');
+            const statusBar = document.createElement('p');
             statusBar.classList.add('status-bar');
 
-            const gameContainer = doc.createElement('div');
+            const gameContainer = document.createElement('div');
             gameContainer.append(gameGrid, statusBar);
             gameContainer.classList.add('game-container');
 
             const scoreCard = () => {
-                const scoreCard = doc.createElement('div');
+                const scoreCard = document.createElement('div');
                 scoreCard.classList.add('score-card');
                 scoreCard.innerHTML = `
-                    <div class="player-score">
-                        <p>${GameModel.player1.name}</p>
-                        <p>${GameModel.scores[0]}</p>
+                    <div>
+                        <p>${GameModel.playerNames[0]}</p>
+                        <p id="player1-score">${GameModel.playerScores[0]}</p>
                     </div>
-                    <div class="player-score">
-                        <p>${GameModel.player2.name}</p>
-                        <p>${GameModel.scores[1]}</p>
+                    <div>
+                        <p>${GameModel.playerNames[1]}</p>
+                        <p id="player2-score">${GameModel.playerScores[1]}</p>
                     </div>
                 `;
                 return scoreCard;
             }
 
-            const gameControls = doc.createElement('div');
+            const gameControls = document.createElement('div');
             gameControls.classList.add('game-controls');
             gameControls.innerHTML = `
                 <button class="game-button" id="new-game"></button>
@@ -205,30 +209,31 @@ const gameController = ( function (doc) {
 
     const updateGameGrid = () => {
         GameModel.BoardState.forEach((cell, index) => {
-            const DOMcellElement = doc.getElementById(`cell-${index}`);
+            const DOMcellElement = document.getElementById(`cell-${index}`);
             DOMcellElement.className = 'cell-default';
-            if(cell === GameModel.player1.symbol){
+            if(cell === GameModel.playerSymbols[0]){
                 DOMcellElement.classList.add('cell-x');
-            } else if(cell === GameModel.player2.symbol){
+            } else if(cell === GameModel.playerSymbols[1]){
                 DOMcellElement.classList.add('cell-o');
             }
         })
     }
 
     const updateScoreCardBorder = () => {
-        DOMscoreCard = doc.querySelector('.score-card');
+        const DOMscoreCard = document.querySelector('.score-card');
         DOMscoreCard.className = 'score-card';
-        if(GameModel.currentPlayer === GameModel.player1){
+        if(GameModel.currentPlayer.name === GameModel.playerNames[0]){
             DOMscoreCard.classList.add('score-card-turn-x');
-        } else if(GameModel.currentPlayer === GameModel.player2){
+        } else if(GameModel.currentPlayer.name === GameModel.playerNames[1]){
             DOMscoreCard.classList.add('score-card-turn-o');
         }
     }
 
     function handleCellClick(event) {
         if(GameModel.gameActive){
-            DOMstatusBar = doc.querySelector('.status-bar');
-            DOMscoreCard = doc.querySelector('.score-card');
+            const DOMstatusBar = document.querySelector('.status-bar');
+            const DOMplayer1Score = document.querySelector('#player1-score');
+            const DOMplayer2Score = document.querySelector('#player2-score');
             event.currentTarget.className = 'game-grid';
             const cellIndex = Number(event.target.id.split('-')[1]);
             const outcome = GameModel.playTurn(cellIndex);
@@ -236,15 +241,16 @@ const gameController = ( function (doc) {
             switch(outcome.state){
                 case 'win':
                     outcome.winningCombo.forEach((index) => {
-                        const winningCell = doc.getElementById(`cell-${index}`);
+                        const winningCell = document.getElementById(`cell-${index}`);
                         winningCell.classList.add('winning-cell');
                     })
                     event.currentTarget.classList.add('game-over');
-                    DOMstatusBar.innerText = `${GameModel.currentPlayer === GameModel.player1 ? GameModel.player2.name : GameModel.player1.name} has won!`;
-                    DOMscoreCard.replaceWith(gameView.scoreCard);
+                    DOMstatusBar.innerText = `${GameModel.currentPlayer.name} has won!`;
+                    DOMplayer1Score.innerText = GameModel.playerScores[0];
+                    DOMplayer2Score.innerText = GameModel.playerScores[1];
                     break;
                 case 'draw':
-                    DOMgameGrid.classList.add('game-over');
+                    event.currentTarget.classList.add('game-over');
                     DOMstatusBar.innerText = `It is a draw. Nobody has won!`;
                     break;
                 case 'continue':
@@ -259,30 +265,39 @@ const gameController = ( function (doc) {
         switch(event.target.id){
             case 'reset-scores':
                 GameModel.resetScores();
-                doc.querySelector('score-card').replaceWith(gameView.scoreCard);
+                const DOMplayer1Score = document.querySelector('#player1-score');
+                const DOMplayer2Score = document.querySelector('#player2-score');
+                DOMplayer1Score.innerText = GameModel.playerScores[0];
+                DOMplayer2Score.innerText = GameModel.playerScores[1];
                 break;
             case 'new-game':
                 GameModel.startNewGame();
                 updateGameGrid();
                 updateScoreCardBorder();
+                document.querySelector('.status-bar').innerText = `${GameModel.currentPlayer.name}'s turn`;
+                document.querySelector('.game-grid').className = 'game-grid';
                 break;
         }
     }
 
-    const renderGame = function () {
-        doc.querySelector('.container').append(
+    const renderGame = () => {
+        document.querySelector('.container').append(
             gameView.scoreCard,
             gameView.gameContainer,
             gameView.gameControls
         );
 
-        doc.querySelector('game-grid').addEventListener('click', handleCellClick);
-        doc.querySelector('.game-controls').addEventListener('click', handleControls);
+        document.querySelector('.game-grid').addEventListener('click', handleCellClick);
+        document.querySelector('.game-controls').addEventListener('click', handleControls);
+        document.querySelector('.status-bar').innerText = `${GameModel.currentPlayer.name}'s turn`;
+        updateScoreCardBorder();
     }
 
     return {
-        renderGame
+        renderGame,
+        newGame: GameModel.startNewGame
     }
-})(document);
+})();
 
+gameController.newGame();
 gameController.renderGame();
