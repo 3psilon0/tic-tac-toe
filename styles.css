@@ -1,3 +1,9 @@
+.press-start-2p-regular {
+    font-family: "Press Start 2P", serif;
+    font-weight: 400;
+    font-style: normal;
+  }  
+
 html, body {
     margin: 0;
     padding: 0;
@@ -9,19 +15,67 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: wheat;
+    background: linear-gradient(90deg, rgb(115, 6, 6), rgb(39, 7, 99));
+    font-family: 'Press Start 2P';
+}
+
+.container {
+    width: 50%;
+    height: 80%;
+}
+
+.score-card {
+    display: flex;
+    justify-content: space-around;
+    margin: 25px;
+    background-color: rgb(42, 8, 73);
+    border-radius: 20px;
+}
+
+.score-card > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.score-card-turn-x {
+    border: 2px solid blue;
+}
+
+.score-card-turn-o {
+    border: 2px solid red;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin: 20px;
 }
 
 .game-grid {
     display: grid;
     grid-template-rows: 1fr 1fr 1fr;
     grid-template-columns: 1fr 1fr 1fr;
-    height: 500px;
-    width: 500px;
+    height: 450px;
+    width: 450px;
 }
 
 .cell-default{
-    border: 1px solid black;
+    border: 1px solid white;
 }
+
+.cell-default:hover {
+    cursor: pointer;
+}
+
+#cell-0, #cell-2, #cell-1 {border-top: none;}
+#cell-6, #cell-7, #cell-8 {border-bottom: none;}
+#cell-0, #cell-3, #cell-6 {border-left: none;}
+#cell-2, #cell-5, #cell-8    {border-right: none;}
 
 .cell-x {
     background: url(./assets/images/cross.png) no-repeat center/100%;
@@ -33,4 +87,72 @@ body {
 
 .winning-cell {
     background-color: lightgreen;
+}
+
+.game-over {
+    opacity: 0.6;
+    cursor: none;       
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: rgba(56, 4, 24, 0.735);
+    height: 50px;
+    width: 80%;
+    border-radius: 20px;
+}
+
+#new-game{
+    background: url(./assets/images/replay.png) no-repeat center/80%;
+    height: 50px;
+    width: 50px;
+    border: none;
+}
+
+#new-game:hover {
+    animation: rotate 1s    ;
+    cursor: pointer;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+#reset-scores {
+    width: 50px;
+    height: 50px;
+    background: url(./assets/images/trash.png) no-repeat center/80%;
+    border: none;
+}
+
+#reset-scores:hover {
+    animation: shake 0.7s;
+    cursor: pointer;
+}
+
+@keyframes shake {
+    25% {
+        transform: rotate(-45deg);
+    }
+    50% {
+        transform: rotate(0deg);
+    }
+    75% {
+        transform: rotate(45deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
 }
